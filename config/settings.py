@@ -33,6 +33,7 @@ DEBUG = False
 ALLOWED_HOSTS = ['6be122479672.ngrok-free.app',
                  'localhost',                  
                  '127.0.0.1',
+                 'https://aurorabackend-production-5b7e.up.railway.app/',
                  
                 ]
 
