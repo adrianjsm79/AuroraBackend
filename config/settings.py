@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from decouple import config
 from datetime import timedelta
+import dj_database_url
 
 from pathlib import Path
 
@@ -34,7 +35,6 @@ ALLOWED_HOSTS = ['6be122479672.ngrok-free.app',
                  '127.0.0.1',
                  
                 ]
-
 
 # Application definition
 
@@ -94,15 +94,22 @@ ASGI_APPLICATION = 'config.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.postgresql',
+#        'NAME': 'aurora',
+#        'USER': 'postgres',
+#        'PASSWORD': config('DB_PASSWORD'),
+#        'HOST': 'localhost',
+#        'PORT': '5432',#default 5432
+#    }
+#}
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'aurora',
-        'USER': 'postgres',
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': 'localhost',
-        'PORT': '5432',#default 5432
-    }
+    'default': dj_database_url.config(
+        #DATABASE_URL que Railway inyecta
+        default=config('DATABASE_URL'),
+        conn_max_age=600
+    )
 }
 
 # Channels
@@ -110,7 +117,8 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            # Lee la variable REDIS_URL que Railway inyecta
+            "hosts": [config('REDIS_URL', default='redis://localhost:6379')],
         },
     },
 }
@@ -175,6 +183,10 @@ CORS_ALLOW_HEADERS = [
     "authorization",
     "ngrok-skip-browser-warning",
     
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://auroraweb-topaz.vercel.app"
 ]
 
 # REST Framework
