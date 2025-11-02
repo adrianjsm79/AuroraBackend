@@ -34,7 +34,7 @@ ALLOWED_HOSTS = ['6be122479672.ngrok-free.app',
                  'localhost',                  
                  '127.0.0.1',
                  'aurorabackend.up.railway.app',
-                 
+                 'auroraweb-topaz.vercel.app',
                 ]
 
 #para produccion :v
@@ -194,7 +194,8 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://auroraweb-topaz.vercel.app"
+    "https://auroraweb-topaz.vercel.app",
+    "https://aurorabackend.up.railway.app",
 ]
 
 # REST Framework
