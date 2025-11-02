@@ -37,6 +37,10 @@ ALLOWED_HOSTS = ['6be122479672.ngrok-free.app',
                  
                 ]
 
+#para produccion :v
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
 # Application definition
 
 INSTALLED_APPS = [
