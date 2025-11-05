@@ -3,24 +3,58 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
+from django.utils import timezone  # <-- 1. Importar timezone
 from .serializers import RegisterSerializer, UserSerializer, TrustedContactSerializer
-#view
+
 User = get_user_model()
 
 
 class RegisterView(generics.CreateAPIView):
+    # --- (Sin cambios) ---
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
 
 
 class ProfileView(generics.RetrieveAPIView):
+    # --- (Sin cambios) ---
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAuthenticated,)
     
     def get_object(self):
         return self.request.user
 
+# --- 2. VISTA NUEVA AÑADIDA ---
+class UpdateBrowserLocationView(APIView):
+    """
+    Nueva vista para que la app web (React) pueda reportar
+    la ubicación del navegador del usuario.
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        latitude = request.data.get('latitude')
+        longitude = request.data.get('longitude')
+
+        if latitude is None or longitude is None:
+            return Response(
+                {'error': 'Latitud y longitud son requeridas'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Actualiza los campos en el modelo User
+        user.browser_latitude = latitude
+        user.browser_longitude = longitude
+        user.browser_last_seen = timezone.now() # <-- Usamos timezone.now()
+        user.save()
+        
+        # Devuelve el perfil del usuario actualizado
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# --- VISTAS DE CONTACTOS (Sin cambios) ---
 
 class TrustedContactsListView(generics.ListAPIView):
     serializer_class = TrustedContactSerializer

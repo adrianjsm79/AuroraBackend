@@ -1,7 +1,6 @@
 from django.urls import path
-from .views import UpdateLocationView, GetLocationsView
+from .views import DeviceLocationHistoryView # <-- 1. Importa la vista correcta
 
 urlpatterns = [
-    path('update/', UpdateLocationView.as_view(), name='update_location'),
-    path('locations/', GetLocationsView.as_view(), name='get_locations'),
+    path('history/<int:device_id>/', DeviceLocationHistoryView.as_view(), name='get_location_history'),
 ]

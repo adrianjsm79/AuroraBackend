@@ -3,6 +3,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 
 class UserManager(BaseUserManager):
+    # --- Tu UserManager (sin cambios) ---
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('El email es obligatorio')
@@ -45,6 +46,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True
     )
     
+    # Campos para guardar la ubicación del navegador del usuario (el "observador")
+    browser_latitude = models.FloatField(null=True, blank=True)
+    browser_longitude = models.FloatField(null=True, blank=True)
+    browser_last_seen = models.DateTimeField(null=True, blank=True)
+    # --- Fin de campos nuevos ---
+
     objects = UserManager()
     
     USERNAME_FIELD = 'email'

@@ -1,12 +1,17 @@
 from django.db import models
-from django.conf import settings
+# Importa el nuevo modelo de la app 'devices'
+from devices.models import Device 
 
 class Location(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+
+    # se enlaza al Dispositivo
+    device = models.ForeignKey(
+        Device, # Enlaza a la app 'devices', modelo 'Device'
         on_delete=models.CASCADE,
-        related_name='locations'
+        related_name='location_history' # historial_de_ubicaciones
     )
+    # -----------------------------------
+    
     latitude = models.FloatField()
     longitude = models.FloatField()
     accuracy = models.FloatField(null=True, blank=True)
@@ -14,8 +19,8 @@ class Location(models.Model):
     
     class Meta:
         ordering = ['-timestamp']
-        verbose_name = 'Ubicación'
-        verbose_name_plural = 'Ubicaciones'
+        verbose_name = 'Historial de Ubicación'
+        verbose_name_plural = 'Historiales de Ubicaciones'
     
     def __str__(self):
-        return f"{self.user.nombre} - {self.timestamp}"
+        return f"{self.device.name} - {self.timestamp}"
