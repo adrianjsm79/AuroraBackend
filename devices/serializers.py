@@ -40,5 +40,10 @@ class DeviceSerializer(serializers.ModelSerializer):
         # El campo 'user' no debe ser editable por el cliente.
         # Se asignará automáticamente desde el usuario logueado.
         extra_kwargs = {
-            'user': {'write_only': True, 'required': False}
+            'user': {'write_only': True, 'required': False},
+            
+            # Mi ViewSet (con update_or_create) se encargará de la lógica."
+            'device_identifier': {
+                'validators': [],  # Quitamos el validador 'unique'
+            } 
         }

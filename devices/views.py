@@ -13,60 +13,39 @@ class DeviceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Un usuario SOLO puede ver SUS propios dispositivos
         return Device.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        # Esta es la lógica clave para "Registrar si no existe"
-        
-        # Obtenemos el ID único del dispositivo desde los datos validados
-        device_identifier = serializer.validated_data.get('device_identifier')
-        
-        # Usamos update_or_create para manejar todos los casos
-        # 1. Si no existe: Lo crea.
-        # 2. Si ya existe: Actualiza el 'user' y el 'name'.
-        device, created = Device.objects.update_or_create(
-            device_identifier=device_identifier,
-            defaults={
-                'user': self.request.user,
-                'name': serializer.validated_data.get('name')
-                # (is_lost se pondrá a False por default)
-            }
-        )
-        
-        # Devolvemos los datos del dispositivo (ya sea nuevo o actualizado)
-        # Usamos el serializador para devolver el objeto completo
-        serializer = self.get_serializer(device)
-        
-        # Devolvemos 201 si fue creado, 200 si fue actualizado
-        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
-        
-        # Sobreescribimos la respuesta estándar
-        # Nota: Estamos devolviendo una respuesta aquí, lo cual es un
-        # pequeño truco para evitar que perform_create intente guardar dos veces.
-        # Una forma más limpia es mover esta lógica al método 'create'.
-        
-        # --- Lógica de 'create' mejorada (reemplazando perform_create) ---
-        pass # Borra 'perform_create' y usa el método 'create' de abajo
+    
 
     def create(self, request, *args, **kwargs):
-        # Validamos los datos que envía el móvil (name, device_identifier)
+        """
+        Sobrescribe el método 'create' (POST) por completo.
+        Esto nos permite implementar la lógica "Update or Create".
+        """
+        
+        # 1. Validamos los datos que envía el móvil (name, device_identifier)
+        #    (El serializador ya no falla por 'unique' gracias a tu corrección)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         validated_data = serializer.validated_data
         device_identifier = validated_data.get('device_identifier')
 
-        # Lógica "Get, Create or Update"
+        # 2. Lógica "Get, Create or Update"
+        #    Busca un dispositivo por su ID único.
         device, created = Device.objects.update_or_create(
             device_identifier=device_identifier,
             defaults={
-                'user': request.user,
+                'user': request.user, # Asigna/Reasigna al usuario actual
                 'name': validated_data.get('name'),
+                # (Opcional) Resetea el estado 'is_lost' al iniciar sesión
                 'is_lost': False 
             }
         )
         
-        # Preparamos la respuesta JSON
+        # 3. Preparamos la respuesta JSON
         response_serializer = self.get_serializer(device)
+        headers = self.get_success_headers(response_serializer.data)
+        
+        # 4. Devolvemos 201 si fue creado, 200 si fue actualizado
         status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         
-        return Response(response_serializer.data, status=status_code)
+        return Response(response_serializer.data, status=status_code, headers=headers)
