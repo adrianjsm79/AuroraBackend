@@ -1,14 +1,24 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from .serializers import RegisterSerializer, UserSerializer, TrustedContactSerializer
-
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import (
+    RegisterSerializer, 
+    UserSerializer, 
+    TrustedContactSerializer,
+    MyTokenObtainPairSerializer  # <-- Asegúrate de que esto se importa
+)
 
 User = get_user_model()
 
+class MyTokenObtainPairView(TokenObtainPairView):
+    """
+    Vista de Login que usa el serializador personalizado
+    para incluir 'user_id' en el token.
+    """
+    serializer_class = MyTokenObtainPairSerializer
 
 class RegisterView(generics.CreateAPIView):
     # --- (Sin cambios) ---
