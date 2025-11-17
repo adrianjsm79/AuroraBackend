@@ -3,7 +3,11 @@ from channels.db import database_sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from rest_framework_simplejwt.tokens import AccessToken, InvalidToken
+
+# --- 1. IMPORTACIONES CORREGIDAS ---
+from rest_framework_simplejwt.tokens import AccessToken
+# La excepción 'TokenError' es la base para todos los errores (incluido InvalidToken)
+from rest_framework_simplejwt.exceptions import TokenError 
 
 User = get_user_model()
 
@@ -14,22 +18,19 @@ def get_user_from_token(token_str):
     y obtiene el usuario.
     """
     try:
-        # Usa AccessToken de simple-jwt para decodificar.
-        # Esto es mucho más robusto que 'jwt.decode'
         token = AccessToken(token_str)
-        
-        # 'simple-jwt' guarda el ID de usuario en el claim 'user_id'
         user_id = token.get('user_id')
         
         if user_id:
             return User.objects.get(id=user_id)
-        
-    except (InvalidToken, User.DoesNotExist):
-        # El token es inválido, expiró, o el usuario no existe
+            
+    # --- 2. EXCEPCIÓN CORREGIDA ---
+    # Capturamos 'TokenError' (que incluye 'InvalidToken', 'ExpiredSignatureError', etc.)
+    # y 'User.DoesNotExist' (si el usuario fue borrado).
+    except (TokenError, User.DoesNotExist):
         return AnonymousUser()
     except Exception as e:
-        # Otro error
-        print(f"Error en middleware de token: {e}")
+        print(f"Error inesperado en middleware de token: {e}")
         return AnonymousUser()
 
     return AnonymousUser()
