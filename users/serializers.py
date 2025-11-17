@@ -11,9 +11,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         # Llama al método original para obtener el token
         token = super().get_token(user)
-
-        # --- 3. AÑADE TUS DATOS PERSONALIZADOS (CLAIMS) ---
-        # Esto es lo que tu TokenAuthMiddleware necesita
         token['user_id'] = user.id
         token['email'] = user.email
         token['nombre'] = user.nombre

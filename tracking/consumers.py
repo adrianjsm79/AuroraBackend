@@ -2,8 +2,8 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
-from devices.models import Device  # <-- 1. Importa el nuevo modelo Device
-from .models import Location     # <-- 2. Importa el modelo Location
+from devices.models import Device
+from .models import Location 
 
 User = get_user_model()
 
@@ -63,7 +63,6 @@ class LocationConsumer(AsyncWebsocketConsumer):
         message_type = data.get('type')
         
         if message_type == 'location_update':
-            # --- 3. Lógica de guardado (¡NUEVO!) ---
             # Guarda la ubicación en la BD y obtén la info del dispositivo
             device_info = await self.save_location(data)
             
@@ -71,7 +70,7 @@ class LocationConsumer(AsyncWebsocketConsumer):
                 # El dispositivo no se encontró o no pertenece al usuario
                 return
 
-            # --- 4. Lógica de transmisión (Corregida) ---
+            # ---  Lógica de transmisión ---
             # Obtener la lista de usuarios que confían en este usuario
             trusted_by_users = await self.get_trusted_by_users()
             
@@ -100,19 +99,19 @@ class LocationConsumer(AsyncWebsocketConsumer):
         Esta función se llama cuando un GRUPO recibe un mensaje.
         Envía el mensaje final al cliente (la app web de React).
         """
-        # --- 5. Mensaje al Cliente (Actualizado) ---
+        # Mensaje al Cliente
         await self.send(text_data=json.dumps({
             'type': 'location_update',
             'user_id': event['user_id'],
             'user_name': event['user_name'],
-            'device_id': event['device_id'],     # <-- Nuevo campo
-            'device_name': event['device_name'], # <-- Nuevo campo
+            'device_id': event['device_id'],
+            'device_name': event['device_name'],
             'latitude': event['latitude'],
             'longitude': event['longitude'],
             'accuracy': event['accuracy'],
         }))
     
-    # --- 6. Nuevas funciones de Base de Datos ---
+    #funciones de Base de Datos
     
     @database_sync_to_async
     def get_trusted_contacts(self):
@@ -131,7 +130,7 @@ class LocationConsumer(AsyncWebsocketConsumer):
         Actualiza el Device y crea un registro en el historial (Location).
         """
         try:
-            # 1. Encontrar el dispositivo basado en el ID y el usuario
+            #Encontrar el dispositivo basado en el ID y el usuario
             device = Device.objects.get(
                 user=self.user,
                 device_identifier=data.get('device_identifier')
@@ -141,13 +140,13 @@ class LocationConsumer(AsyncWebsocketConsumer):
             lon = data.get('longitude')
             acc = data.get('accuracy')
             
-            # 2. Actualizar la "última ubicación" en el dispositivo
+            #Actualizar la "última ubicación" en el dispositivo
             device.latitude = lat
             device.longitude = lon
             device.accuracy = acc
             device.save() # Esto también actualiza 'last_seen'
             
-            # 3. Crear un registro en el historial
+            #Crear un registro en el historial
             Location.objects.create(
                 device=device,
                 latitude=lat,
