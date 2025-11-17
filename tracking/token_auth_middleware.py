@@ -1,48 +1,53 @@
-# tracking/token_auth_middleware.py
-
+import jwt
 from channels.db import database_sync_to_async
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
+from rest_framework_simplejwt.tokens import AccessToken, InvalidToken
 
-# No se necesita 'import jwt' ni 'settings' aquí
+User = get_user_model()
 
 @database_sync_to_async
-def get_user_from_token(token_key):
+def get_user_from_token(token_str):
     """
-    Obtiene un usuario a partir de un token de Django REST Framework.
+    Decodifica el token usando la librería 'simple-jwt' 
+    y obtiene el usuario.
     """
-    # Importaciones diferidas para evitar 'AppRegistryNotReady'
-    from rest_framework.authtoken.models import Token
-    from django.contrib.auth.models import AnonymousUser
-
     try:
-        # Busca el token por su 'key' en la base de datos
-        token = Token.objects.select_related('user').get(key=token_key)
-        # Devuelve el usuario asociado a ese token
-        return token.user
-    except Token.DoesNotExist:
-        # Si el token no existe, el usuario es anónimo
+        # Usa AccessToken de simple-jwt para decodificar.
+        # Esto es mucho más robusto que 'jwt.decode'
+        token = AccessToken(token_str)
+        
+        # 'simple-jwt' guarda el ID de usuario en el claim 'user_id'
+        user_id = token.get('user_id')
+        
+        if user_id:
+            return User.objects.get(id=user_id)
+        
+    except (InvalidToken, User.DoesNotExist):
+        # El token es inválido, expiró, o el usuario no existe
         return AnonymousUser()
+    except Exception as e:
+        # Otro error
+        print(f"Error en middleware de token: {e}")
+        return AnonymousUser()
+
+    return AnonymousUser()
 
 class TokenAuthMiddleware:
     """
-    Middleware que toma un token de la cabecera 'Authorization'
-    y autentica al usuario para la conexión WebSocket.
+    Middleware de autenticación por Token para WebSockets.
     """
     def __init__(self, inner):
         self.inner = inner
 
     async def __call__(self, scope, receive, send):
-        from django.contrib.auth.models import AnonymousUser
-
-        headers = dict(scope.get('headers', []))
-        auth_header = headers.get(b'authorization', b'').decode('utf-8')
-
-        token = None
-        # Verifica que la cabecera sea "Token <key>"
-        if auth_header.startswith('Token '):
-            token = auth_header.split(' ')[1]
+        
+        query_string = scope.get('query_string', b"").decode("utf-8")
+        query_params = dict(param.split("=") for param in query_string.split("&") if "=" in param)
+        token = query_params.get('token')
 
         if token:
-            # Llama a la función correcta para validar el token
             scope['user'] = await get_user_from_token(token)
         else:
             scope['user'] = AnonymousUser()

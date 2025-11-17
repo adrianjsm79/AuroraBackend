@@ -1,25 +1,28 @@
-# config/asgi.py
-
 import os
 from django.core.asgi import get_asgi_application
-
-# 1. Primero, se configura el entorno de Django y se obtiene la aplicación principal.
-#    Esto inicializa Django completamente.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-django_asgi_app = get_asgi_application()
-
-# 2. AHORA, con Django ya cargado, importamos de forma segura los componentes de Channels.
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
-from tracking.token_auth_middleware import TokenAuthMiddlewareStack
+
+# 1. IMPORTA TU MIDDLEWARE DE TOKEN
+from tracking.token_auth_middleware import TokenAuthMiddlewareStack 
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+
+django_asgi_app = get_asgi_application()
+
+# Importa tus rutas de websocket DESPUÉS de setdefault
 from tracking.routing import websocket_urlpatterns
 
-
-# 3. Finalmente, se construye el enrutador principal de la aplicación.
 application = ProtocolTypeRouter({
+    # El tráfico HTTP normal va a Django
     "http": django_asgi_app,
+    
+    # El tráfico WebSocket va a Channels
     "websocket": AllowedHostsOriginValidator(
+        # 2. USA TU MIDDLEWARE
+        # TokenAuthMiddlewareStack se encarga de la autenticación
         TokenAuthMiddlewareStack(
+            # URLRouter dirige a tu LocationConsumer
             URLRouter(websocket_urlpatterns)
         )
     ),
