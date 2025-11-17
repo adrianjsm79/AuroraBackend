@@ -1,7 +1,24 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
 User = get_user_model()
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        # Llama al método original para obtener el token
+        token = super().get_token(user)
+
+        # --- 3. AÑADE TUS DATOS PERSONALIZADOS (CLAIMS) ---
+        # Esto es lo que tu TokenAuthMiddleware necesita
+        token['user_id'] = user.id
+        token['email'] = user.email
+        token['nombre'] = user.nombre
+        
+        return token
 
 class UserSerializer(serializers.ModelSerializer):
     """
