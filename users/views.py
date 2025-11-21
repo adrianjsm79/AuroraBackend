@@ -8,7 +8,7 @@ from .serializers import (
     RegisterSerializer, 
     UserSerializer, 
     TrustedContactSerializer,
-    MyTokenObtainPairSerializer  # <-- Asegúrate de que esto se importa
+    MyTokenObtainPairSerializer 
 )
 
 User = get_user_model()
@@ -21,24 +21,21 @@ class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 class RegisterView(generics.CreateAPIView):
-    # --- (Sin cambios) ---
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
 
 
-class ProfileView(generics.RetrieveAPIView):
-    # --- (Sin cambios) ---
+class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAuthenticated,)
     
     def get_object(self):
         return self.request.user
 
-# --- 2. VISTA NUEVA AÑADIDA ---
 class UpdateBrowserLocationView(APIView):
     """
-    Nueva vista para que la app web (React) pueda reportar
+    Nueva vista para que React pueda reportar
     la ubicación del navegador del usuario.
     """
     permission_classes = (permissions.IsAuthenticated,)
@@ -54,18 +51,15 @@ class UpdateBrowserLocationView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Actualiza los campos en el modelo User
         user.browser_latitude = latitude
         user.browser_longitude = longitude
-        user.browser_last_seen = timezone.now() # <-- Usamos timezone.now()
+        user.browser_last_seen = timezone.now()
         user.save()
         
         # Devuelve el perfil del usuario actualizado
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-# --- VISTAS DE CONTACTOS (Sin cambios) ---
 
 class TrustedContactsListView(generics.ListAPIView):
     serializer_class = TrustedContactSerializer
