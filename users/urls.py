@@ -7,7 +7,8 @@ from .views import (
     AddTrustedContactView, 
     RemoveTrustedContactView,
     UpdateBrowserLocationView,
-    MyTokenObtainPairView
+    MyTokenObtainPairView,
+    TrustedByContactsListView,
 )
 
 urlpatterns = [
