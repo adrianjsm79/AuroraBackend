@@ -121,3 +121,15 @@ class RemoveTrustedContactView(APIView):
                 {'error': 'Contacto no encontrado'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+class TrustedByContactsListView(generics.ListAPIView):
+    """
+    Devuelve la lista de usuarios que han agregado al usuario actual
+    como contacto de confianza (quiénes confían en mí).
+    """
+    serializer_class = TrustedContactSerializer # Podemos reusar el mismo serializer
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def get_queryset(self):
+        # Usamos el related_name 'trusted_by' definido en tu modelo User
+        return self.request.user.trusted_by.all()
