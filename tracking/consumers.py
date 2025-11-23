@@ -63,11 +63,16 @@ class LocationConsumer(AsyncWebsocketConsumer):
         message_type = data.get('type')
         
         if message_type == 'location_update':
+            print(f"UBICACIÓN RECIBIDA: Usuario {self.user.email} -> {data.get('latitude')}, {data.get('longitude')}")
             # Guarda la ubicación en la BD y obtén la info del dispositivo
             device_info = await self.save_location(data)
             
             if not device_info:
-                # El dispositivo no se encontró o no pertenece al usuario
+                # --- PRINT DE DEBUG PARA ERRORES ---
+                print(f"ERROR: Dispositivo no encontrado o no pertenece al usuario.")
+                print(f"   - Usuario: {self.user.email} (ID: {self.user.id})")
+                print(f"   - Device ID recibido: {data.get('device_identifier')}")
+                
                 return
 
             # ---  Lógica de transmisión ---
