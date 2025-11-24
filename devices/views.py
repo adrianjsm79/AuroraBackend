@@ -1,7 +1,8 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from .models import Device
-from .serializers import DeviceSerializer # (El serializer que ya creamos)
+from .serializers import DeviceSerializer
 
 class DeviceViewSet(viewsets.ModelViewSet):
     """
@@ -49,3 +50,23 @@ class DeviceViewSet(viewsets.ModelViewSet):
         status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         
         return Response(response_serializer.data, status=status_code, headers=headers)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def contacts_devices(self, request):
+        """
+        Obtiene los dispositivos de todos los contactos del usuario actual
+        que están visibles y con los que el usuario tiene confianza mutua.
+        """
+        user = request.user
+        
+        # Obtener los contactos en los que el usuario confía (trustedContacts)
+        trusted_contacts = user.trusted_contacts.all()
+        
+        # Obtener los dispositivos de esos contactos que son visibles
+        contacts_devices = Device.objects.filter(
+            user__in=trusted_contacts,
+            is_visible_to_contacts=True
+        )
+        
+        serializer = self.get_serializer(contacts_devices, many=True)
+        return Response(serializer.data)
