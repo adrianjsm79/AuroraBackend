@@ -31,6 +31,12 @@ class Device(models.Model):
         verbose_name="Reportado como perdido"
     )
     
+    # Visibilidad para contactos
+    is_visible_to_contacts = models.BooleanField(
+        default=True,
+        verbose_name="Visible para contactos de confianza"
+    )
+    
     # ubicacion
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)

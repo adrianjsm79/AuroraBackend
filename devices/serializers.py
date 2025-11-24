@@ -18,6 +18,7 @@ class DeviceSerializer(serializers.ModelSerializer):
             'name', 
             'device_identifier', 
             'is_lost', 
+            'is_visible_to_contacts',
             'latitude', 
             'longitude', 
             'accuracy',
