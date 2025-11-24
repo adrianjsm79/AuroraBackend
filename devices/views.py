@@ -70,3 +70,59 @@ class DeviceViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(contacts_devices, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    def update_visibility(self, request, pk=None):
+        """
+        Actualiza la visibilidad de un dispositivo para los contactos.
+        """
+        device = self.get_object()
+        
+        # Verificar que el dispositivo pertenece al usuario actual
+        if device.user != request.user:
+            return Response(
+                {'error': 'No tienes permiso para modificar este dispositivo'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        is_visible = request.data.get('is_visible_to_contacts')
+        
+        if is_visible is None:
+            return Response(
+                {'error': 'El campo is_visible_to_contacts es requerido'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        device.is_visible_to_contacts = is_visible
+        device.save()
+        
+        serializer = self.get_serializer(device)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    def update_lost_status(self, request, pk=None):
+        """
+        Actualiza el estado de perdido de un dispositivo.
+        """
+        device = self.get_object()
+        
+        # Verificar que el dispositivo pertenece al usuario actual
+        if device.user != request.user:
+            return Response(
+                {'error': 'No tienes permiso para modificar este dispositivo'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        is_lost = request.data.get('is_lost')
+        
+        if is_lost is None:
+            return Response(
+                {'error': 'El campo is_lost es requerido'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        device.is_lost = is_lost
+        device.save()
+        
+        serializer = self.get_serializer(device)
+        return Response(serializer.data, status=status.HTTP_200_OK)
