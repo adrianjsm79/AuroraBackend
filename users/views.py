@@ -8,6 +8,7 @@ from .serializers import (
     RegisterSerializer, 
     UserSerializer, 
     TrustedContactSerializer,
+    TrustedContactWithDevicesSerializer,
     MyTokenObtainPairSerializer 
 )
 
@@ -125,9 +126,10 @@ class RemoveTrustedContactView(APIView):
 class TrustedByContactsListView(generics.ListAPIView):
     """
     Devuelve la lista de usuarios que han agregado al usuario actual
-    como contacto de confianza (quiénes confían en mí).
+    como contacto de confianza (quiénes confían en mí), incluyendo
+    sus dispositivos que son visibles para contactos.
     """
-    serializer_class = TrustedContactSerializer # Podemos reusar el mismo serializer
+    serializer_class = TrustedContactWithDevicesSerializer
     permission_classes = (permissions.IsAuthenticated,)
     
     def get_queryset(self):

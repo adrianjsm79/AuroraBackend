@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from devices.serializers import DeviceSerializer
 
 
 User = get_user_model()
@@ -64,3 +65,22 @@ class TrustedContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'nombre', 'email', 'numero')
+
+
+class TrustedContactWithDevicesSerializer(serializers.ModelSerializer):
+    """
+    Serializador que incluye los dispositivos de un contacto que son visibles
+    para el usuario actual.
+    """
+    devices = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ('id', 'nombre', 'email', 'numero', 'devices')
+    
+    def get_devices(self, obj):
+        """
+        Devuelve solo los dispositivos visibles para contactos.
+        """
+        visible_devices = obj.devices.filter(is_visible_to_contacts=True)
+        return DeviceSerializer(visible_devices, many=True).data
