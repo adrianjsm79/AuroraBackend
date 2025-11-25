@@ -101,20 +101,35 @@ class LocationConsumer(AsyncWebsocketConsumer):
     
     async def location_message(self, event):
         """
-        Esta función se llama cuando un GRUPO recibe un mensaje.
-        Envía el mensaje final al cliente (la app web de React).
+        Este método se activa cuando alguien (la View o otro Consumer) 
+        envía un mensaje al grupo usando 'group_send'.
+        Actúa como un 'Router' de salida hacia el WebSocket.
         """
-        # Mensaje al Cliente
-        await self.send(text_data=json.dumps({
-            'type': 'location_update',
-            'user_id': event['user_id'],
-            'user_name': event['user_name'],
-            'device_id': event['device_id'],
-            'device_name': event['device_name'],
-            'latitude': event['latitude'],
-            'longitude': event['longitude'],
-            'accuracy': event['accuracy'],
-        }))
+        
+        # CASO A: Es un comando de estado (Alerta de Robo desde la View)
+        # Detectamos si el evento tiene la clave 'command'
+        if 'command' in event:
+            await self.send(text_data=json.dumps({
+                'type': 'location_update', # Mantenemos el tipo base para que el cliente Android escuche siempre el mismo canal
+                'command': event['command'], # 'update_status'
+                'device_id': event['device_id'],
+                'is_lost': event['is_lost']
+            }))
+            
+        # CASO B: Es una actualización de ubicación normal (GPS desde otro celular)
+        # (Tu lógica estándar)
+        else:
+            # Evitamos errores si falta algún campo usando .get()
+            await self.send(text_data=json.dumps({
+                'type': 'location_update',
+                'user_id': event.get('user_id'),
+                'user_name': event.get('user_name'),
+                'device_id': event.get('device_id'),
+                'device_name': event.get('device_name'),
+                'latitude': event.get('latitude'),
+                'longitude': event.get('longitude'),
+                'accuracy': event.get('accuracy'),
+            }))
     
     #funciones de Base de Datos
     
