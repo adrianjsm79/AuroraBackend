@@ -1,6 +1,8 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from .models import Device
 from .serializers import DeviceSerializer
 
@@ -126,3 +128,23 @@ class DeviceViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(device)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def perform_update(self, serializer):
+        # 1. Guardar el cambio en la base de datos
+        instance = serializer.save()
+        
+        # 2. Si el estado 'is_lost' cambió, notificar por WebSocket
+        if 'is_lost' in serializer.validated_data:
+            is_lost = serializer.validated_data['is_lost']
+            
+            channel_layer = get_channel_layer()
+            # Enviamos el mensaje al grupo del usuario dueño del dispositivo
+            async_to_sync(channel_layer.group_send)(
+                f'user_{instance.user.id}',
+                {
+                    'type': 'location_message', # Reutilizamos tu handler existente
+                    'command': 'update_status', # Nuevo comando
+                    'device_id': instance.id,
+                    'is_lost': is_lost
+                }
+            )
