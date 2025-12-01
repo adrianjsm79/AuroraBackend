@@ -33,6 +33,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         verbose_name='Número de teléfono'
     )
+    image = models.ImageField(
+        upload_to='profile_pics/', 
+        null=True, 
+        blank=True, 
+        verbose_name='Foto de Perfil'
+    )
     
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

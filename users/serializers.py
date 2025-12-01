@@ -19,21 +19,35 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
 class UserSerializer(serializers.ModelSerializer):
-    """
-    Serializador actualizado para mostrar la información del usuario,
-    incluyendo la última ubicación de su navegador.
-    """
+    
+    password = serializers.CharField(write_only=True, required=False)
+    
     class Meta:
         model = User
         fields = (
             'id', 'email', 'nombre', 'numero', 'date_joined',
-            # --- CAMPOS NUEVOS AÑADIDOS ---
-            'browser_latitude', 'browser_longitude', 'browser_last_seen'
+            'browser_latitude', 'browser_longitude', 'browser_last_seen',
+            'image', 'password'
         )
         read_only_fields = (
             'id', 'date_joined', 
             'browser_latitude', 'browser_longitude', 'browser_last_seen'
         )
+    
+    def update(self, instance, validated_data):
+        
+        password = validated_data.pop('password', None)
+        
+        # Actualizamos el resto de campos (nombre, email, numero, imagen)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # Si había contraseña nueva, la encriptamos y guardamos
+        if password:
+            instance.set_password(password)
+            
+        instance.save()
+        return instance
 
 
 class RegisterSerializer(serializers.ModelSerializer):
