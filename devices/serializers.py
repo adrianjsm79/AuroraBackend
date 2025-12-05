@@ -2,18 +2,13 @@ from rest_framework import serializers
 from .models import Device
 
 class DeviceSerializer(serializers.ModelSerializer):
-    """
-    Serializador para crear, listar y ver detalles de un Dispositivo.
-    """
-    
-    # Muestra el email del usuario en lugar de solo su ID (solo lectura)
     user_email = serializers.EmailField(source='user.email', read_only=True)
 
-   class Meta:
+    class Meta:
         model = Device
         fields = [
             'id', 
-            'user',          # Ahora sí se enviará
+            'user',
             'user_email',    
             'name', 
             'device_identifier', 
@@ -27,7 +22,7 @@ class DeviceSerializer(serializers.ModelSerializer):
         
         read_only_fields = [
             'id', 
-            'user',          # <--- MOVEMOS 'user' AQUÍ
+            'user',
             'user_email', 
             'latitude', 
             'longitude', 
@@ -37,8 +32,6 @@ class DeviceSerializer(serializers.ModelSerializer):
         ]
         
         extra_kwargs = {
-            # Eliminamos 'user' de aquí porque ya está en read_only_fields
-            
             'device_identifier': {
                 'validators': [], 
             }
