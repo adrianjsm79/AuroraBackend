@@ -10,7 +10,11 @@ from .views import (
     UpdateBrowserLocationView,
     MyTokenObtainPairView,
     TrustedByContactsListView,
+    RequestPasswordResetView,
+    VerifyResetCodeView,
+    CompletePasswordResetView
 )
+
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
@@ -27,4 +31,8 @@ urlpatterns = [
     path('trusted-contacts/<int:contact_id>/remove/', RemoveTrustedContactView.as_view(), name='remove_trusted_contact'),
     path('trusted-contacts/trusted-by/', TrustedByContactsListView.as_view(), name='trusted_by_contacts'),
     path('legal/<int:code>/', GetLegalDocumentView.as_view(), name='get_legal_document'),
+    
+    path('password-reset/request/', RequestPasswordResetView.as_view(), name='password_reset_request'),
+    path('password-reset/verify/', VerifyResetCodeView.as_view(), name='password_reset_verify'),
+    path('password-reset/confirm/', CompletePasswordResetView.as_view(), name='password_reset_confirm'),
 ]

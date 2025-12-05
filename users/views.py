@@ -13,6 +13,11 @@ from .serializers import (
     TrustedContactWithDevicesSerializer,
     MyTokenObtainPairSerializer 
 )
+from django.core.mail import send_mail
+from django.conf import settings
+from .models import PasswordResetCode
+
+
 
 User = get_user_model()
 
@@ -169,3 +174,71 @@ class GetLegalDocumentView(APIView):
                 {'error': 'Documento legal no encontrado'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+# 1. SOLICITAR CÓDIGO
+class RequestPasswordResetView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        try:
+            user = User.objects.get(email=email)
+            reset_code = PasswordResetCode.generate_code(user)
+            
+            # Enviar Correo (Configura SMTP en settings.py)
+            send_mail(
+                'Código de recuperación - Aurora',
+                f'Tu código de recuperación es: {reset_code.code}. Expira en 15 minutos.',
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            return Response({'message': 'Código enviado'}, status=status.HTTP_200_OK)
+            
+        except User.DoesNotExist:
+            # Por seguridad, no decimos si el email no existe, solo simulamos éxito
+            # o puedes devolver 404 si prefieres UX sobre seguridad estricta.
+            return Response({'message': 'Si el correo existe, se envió el código'}, status=status.HTTP_200_OK)
+
+# 2. VERIFICAR CÓDIGO (Para pasar a la siguiente pantalla)
+class VerifyResetCodeView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
+        
+        try:
+            user = User.objects.get(email=email)
+            reset_record = PasswordResetCode.objects.filter(user=user, code=code).first()
+            
+            if reset_record and reset_record.is_valid():
+                return Response({'message': 'Código válido'}, status=status.HTTP_200_OK)
+            return Response({'error': 'Código inválido o expirado'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        except User.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+# 3. CAMBIAR CONTRASEÑA FINAL
+class CompletePasswordResetView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
+        new_password = request.data.get('new_password')
+        
+        try:
+            user = User.objects.get(email=email)
+            reset_record = PasswordResetCode.objects.filter(user=user, code=code).first()
+            
+            if reset_record and reset_record.is_valid():
+                user.set_password(new_password)
+                user.save()
+                reset_record.delete() # Borrar el código usado
+                return Response({'message': 'Contraseña actualizada'}, status=status.HTTP_200_OK)
+            
+            return Response({'error': 'Código inválido'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        except User.DoesNotExist:
+            return Response({'error': 'Error'}, status=status.HTTP_400_BAD_REQUEST)
