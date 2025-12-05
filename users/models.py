@@ -2,6 +2,19 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.core.validators import RegexValidator
 
+class LegalDocument(models.Model):
+    """
+    Guarda documentos legales como Términos y Privacidad.
+    code: 100 (Términos), 101 (Privacidad), etc.
+    """
+    code = models.IntegerField(unique=True, verbose_name="Código del Documento")
+    title = models.CharField(max_length=200, verbose_name="Título")
+    content_html = models.TextField(verbose_name="Contenido HTML")
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.code})"
+
 class UserManager(BaseUserManager):
     # --- Tu UserManager (sin cambios) ---
     def create_user(self, email, password=None, **extra_fields):
