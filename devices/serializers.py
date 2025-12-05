@@ -2,15 +2,20 @@ from rest_framework import serializers
 from .models import Device
 
 class DeviceSerializer(serializers.ModelSerializer):
-    user_email = serializers.EmailField(source='user.email', read_only=True)
+    # 1. Definimos los campos que vienen del usuario relacionado
+    user_email = serializers.ReadOnlyField(source='user.email')
+    
+    # 2. Para la imagen, usamos SerializerMethodField.
+    # IMPORTANTE: Este campo ya es ReadOnly por defecto.
+    user_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Device
         fields = [
             'id', 
             'user',
-            'user_email',
-            'user_image',
+            'user_email',    
+            'user_image', 
             'name', 
             'device_identifier', 
             'is_lost', 
@@ -21,11 +26,12 @@ class DeviceSerializer(serializers.ModelSerializer):
             'created_at'
         ]
         
+        # 3. CORRECCIÓN: Quitamos 'user_image' de esta lista.
+        # Solo dejamos los campos que SÍ existen en el modelo Device.
         read_only_fields = [
             'id', 
             'user',
-            'user_email',
-            'user_image',
+            'user_email', 
             'latitude', 
             'longitude', 
             'accuracy', 
