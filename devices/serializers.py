@@ -9,16 +9,15 @@ class DeviceSerializer(serializers.ModelSerializer):
     # Muestra el email del usuario en lugar de solo su ID (solo lectura)
     user_email = serializers.EmailField(source='user.email', read_only=True)
 
-    class Meta:
+   class Meta:
         model = Device
         fields = [
             'id', 
-            'user',         # ID del usuario (necesario para la creación implícita)
-            'user_email',   # Email (para mostrar en la API)
+            'user',          # Ahora sí se enviará
+            'user_email',    
             'name', 
             'device_identifier', 
             'is_lost', 
-            'is_visible_to_contacts',
             'latitude', 
             'longitude', 
             'accuracy',
@@ -26,10 +25,9 @@ class DeviceSerializer(serializers.ModelSerializer):
             'created_at'
         ]
         
-        # Oculta el campo 'user' al leer (ya mostramos 'user_email')
-        # y hace que otros campos sean de solo lectura.
         read_only_fields = [
             'id', 
+            'user',          # <--- MOVEMOS 'user' AQUÍ
             'user_email', 
             'latitude', 
             'longitude', 
@@ -38,13 +36,10 @@ class DeviceSerializer(serializers.ModelSerializer):
             'created_at'
         ]
         
-        # El campo 'user' no debe ser editable por el cliente.
-        # Se asignará automáticamente desde el usuario logueado.
         extra_kwargs = {
-            'user': {'write_only': True, 'required': False},
+            # Eliminamos 'user' de aquí porque ya está en read_only_fields
             
-            # Mi ViewSet (con update_or_create) se encargará de la lógica."
             'device_identifier': {
-                'validators': [],  # Quitamos el validador 'unique'
-            } 
+                'validators': [], 
+            }
         }
