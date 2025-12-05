@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+import base64
+from .models import LegalDocument
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import (
     RegisterSerializer, 
@@ -135,3 +137,35 @@ class TrustedByContactsListView(generics.ListAPIView):
     def get_queryset(self):
         # Usamos el related_name 'trusted_by' definido en tu modelo User
         return self.request.user.trusted_by.all()
+
+
+class GetLegalDocumentView(APIView):
+    """
+    Devuelve un documento legal codificado en Base64.
+    Permiso: AllowAny (porque el usuario aún no se ha registrado).
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, code):
+        try:
+            document = LegalDocument.objects.get(code=code)
+            
+            # 1. Convertir el HTML a bytes
+            html_bytes = document.content_html.encode('utf-8')
+            # 2. Codificar a Base64
+            base64_bytes = base64.b64encode(html_bytes)
+            # 3. Decodificar a string para enviarlo en JSON
+            base64_string = base64_bytes.decode('utf-8')
+            
+            return Response({
+                'code': document.code,
+                'title': document.title,
+                'content_base64': base64_string,
+                'updated_at': document.last_updated
+            }, status=status.HTTP_200_OK)
+            
+        except LegalDocument.DoesNotExist:
+            return Response(
+                {'error': 'Documento legal no encontrado'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )

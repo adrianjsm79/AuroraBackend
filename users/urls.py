@@ -1,5 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .views import GetLegalDocumentView
 from .views import (
     RegisterView, 
     ProfileView, 
@@ -25,4 +26,5 @@ urlpatterns = [
     path('trusted-contacts/add/', AddTrustedContactView.as_view(), name='add_trusted_contact'),
     path('trusted-contacts/<int:contact_id>/remove/', RemoveTrustedContactView.as_view(), name='remove_trusted_contact'),
     path('trusted-contacts/trusted-by/', TrustedByContactsListView.as_view(), name='trusted_by_contacts'),
+    path('legal/<int:code>/', GetLegalDocumentView.as_view(), name='get_legal_document'),
 ]
