@@ -9,7 +9,8 @@ class DeviceSerializer(serializers.ModelSerializer):
         fields = [
             'id', 
             'user',
-            'user_email',    
+            'user_email',
+            'user_image',
             'name', 
             'device_identifier', 
             'is_lost', 
@@ -23,7 +24,8 @@ class DeviceSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 
             'user',
-            'user_email', 
+            'user_email',
+            'user_image',
             'latitude', 
             'longitude', 
             'accuracy', 
