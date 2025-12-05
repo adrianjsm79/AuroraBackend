@@ -38,3 +38,12 @@ class DeviceSerializer(serializers.ModelSerializer):
                 'validators': [], 
             }
         }
+
+    # 3. Método para obtener la URL de la imagen
+    def get_user_image(self, obj):
+        try:
+            if obj.user.image:
+                return obj.user.image.url
+        except:
+            pass
+        return None
