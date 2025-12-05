@@ -49,6 +49,10 @@ class DeviceSerializer(serializers.ModelSerializer):
     def get_user_image(self, obj):
         try:
             if obj.user.image:
+                # Obtenemos el request del contexto para construir la URL completa
+                request = self.context.get('request')
+                if request:
+                    return request.build_absolute_uri(obj.user.image.url)
                 return obj.user.image.url
         except:
             pass
